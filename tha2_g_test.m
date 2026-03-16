@@ -2,7 +2,8 @@ addpath("Functions");
 
 %% Test Script (most classic example i could find) 
 clear; clc; close all;
-%  3-Link 3 revolute joint easy stuff 
+%  3-Link 3 revolute joint easy stuff W6-L1 slide 2 - 7 (its the fwd
+%  kinemetics of a 3R 
 L1 = 1; L2 = 1; L3 = 1;
 
 % Configuration (Change these to see ellipsoid shapes change!)
@@ -94,7 +95,7 @@ if ~isempty(h_lin) && ~isempty(h_ang)
 end
 
 %% Jacobian_space (taken from a matlab forum just for this example lol idk if this right 
-% (Calculates the space Jacobian for PoE)
+% (Calculates the space Jacobian for PoE) W6-L1 slide 7
 function J = Jacobian_space(Slist, theta)
     n = length(theta);
     J = zeros(6, n);
