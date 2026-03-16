@@ -1,4 +1,4 @@
-function expS = screw_to_exp(S, theta)
+function expS = screw_to_exp(S, theta) % W5-L1 slide 6 & W5-L1 slide 10
 % converts a screw axis and angle to a transformation matrix.
 % S: 6x1 screw axis [w; v]
 % theta: scalar joint angle

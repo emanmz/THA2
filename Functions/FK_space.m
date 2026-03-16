@@ -1,4 +1,4 @@
-function T = FK_space(M, Sn, theta)
+function T = FK_space(M, Sn, theta) % W6-2 slide 6 (sort of 2-6) & W4-L1 slide 12 (fixed frame vs body frame)
 % M: 4x4 home position configuration matrix
 % Slist: 6xn matrix of spatial screw axes [wi; vi]
 % theta: 1xn vector of joint variables
