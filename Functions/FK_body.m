@@ -7,7 +7,7 @@ function T = FK_body(M, Bn, theta)  % W6-2 slide 6 (sort of 2-6) & W4-L1 slide 1
 
     T = M;
     for i = 1:length(theta)
-        % multiply the home matrix by the exponentials from left to right
+        % pre multiply the home matrix by the exponentials from left to right
         T = T * screw_to_exp(Bn(:,i), theta(i));
     end
 end
