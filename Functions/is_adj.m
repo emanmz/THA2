@@ -1,4 +1,4 @@
-function adj = is_adj(M, S, B)
+function adj = is_adj(M, S, B) % W5-L1 slide 2
 % S: 6x1 Space Screw
 % B: 6x1 Body Screw
 % M: 4x4 Home position
