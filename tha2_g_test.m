@@ -34,7 +34,8 @@ disp('Current Theta:');
 disp(theta);
 fprintf('Manipulability Metrics \n');
 
-% NOTE: Since it is a planar robot, we look at the 2D plane (X-Y) for non-zero metrics
+%  it is a planar robot look at the 2D plane (X-Y) for non-zero metrics
+%  (was getting 0.00 and 0.000 :P and inf 
 Jv_2D = J(4:5, :); 
 fprintf('Isotropy (Linear 2D):    %.4f\n', J_isotropy(Jv_2D));
 fprintf('Condition Number (2D):   %.4f\n', J_condition(Jv_2D));
@@ -80,7 +81,7 @@ h_robot = plot3(points(1,:), points(2,:), points(3,:), 'k-o', 'LineWidth', 3, 'M
 ellipsoid_plot_linear(J, T);  % Should be Magenta: [1 0 1]
 ellipsoid_plot_angular(J, T); % Should be Green: [0 1 0]
 
-% This prevents the legend from listing every individual axis line
+% no legend from listing every individual axis line
 h_lin = findobj(gca, 'Type', 'Surface', 'FaceColor', [1 0 1]);
 h_ang = findobj(gca, 'Type', 'Surface', 'FaceColor', [0 1 0]);
 
