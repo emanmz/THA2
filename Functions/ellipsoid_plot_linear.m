@@ -1,5 +1,4 @@
-function ellipsoid_plot_linear(J, T)
-% J: 6xn Jacobian matrix 
+function ellipsoid_plot_linear(J, T) % W7-L2 slide 75-6
 % T: 4x4 current end-effector transformation matrix (for position)
 
     % Extract linear part (rows 4-6)

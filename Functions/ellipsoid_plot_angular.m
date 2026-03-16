@@ -1,4 +1,4 @@
-function ellipsoid_plot_angular(J, T)
+function ellipsoid_plot_angular(J, T) % W7-L2 slide 5-6
 % J: 6xn Jacobian matrix
 % T: 4x4 current end-effector transformation matrix
 

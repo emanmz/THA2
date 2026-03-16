@@ -1,4 +1,4 @@
-function vol = J_ellipsoid_volume(J)
+function vol = J_ellipsoid_volume(J) % W7-L2 slide 7
 % Calculates a value proportional to the volume
 % J: 3xn sub-Jacobian (either Jv or Jw)
 
