@@ -8,7 +8,7 @@ L3 = .060;
 W1 = .045;
 
 theta_wam = [0, pi/4, 0, -pi/4, 0, -pi/2, 0];
-% Body Screws: Convert your {wb} and {qb} into a 6x7 Blist
+% Body Screws: Convert {wb} and {qb} into a 6x7 Blist
 wb = {[0;0;1], [0;1;0], [0;0;1], [0;1;0], [0;0;1], [0;1;0], [0;0;1]};
 qb = {[0;0;0], [0;0;-(L1+L2+L3)], [0;0;0], [W1;0;-(L2+L3)], [0;0;0], [0;0;-L3], [0;0;0]};
 
@@ -33,7 +33,8 @@ Slist_wam = zeros(6, 7);
 for i = 1:7
     Slist_wam(:, i) = Adjoint(M_wam) * Blist_wam(:, i);
 end
-% also check if space and body are equivalent using adjoint. W6-L1-SL15 i
+% also check if space and body are equivalent using adjoint. W6-L1-SL1
+% done! 
 
 % Forward Kinematics (Space)
 Ts_WAM = FK_space(M_wam, Slist_wam, theta_wam);
@@ -71,9 +72,3 @@ Tb_3r = FK_body(M_3r, Blist_3r, theta_3r);
 
 fprintf('3R Space/Body Equivalence Error: %e\n', norm(Ts_3r - Tb_3r));
 
-function Ad = Adjoint(T)
-    R = T(1:3, 1:3);
-    p = T(1:3, 4);
-    p_sk = [0 -p(3) p(2); p(3) 0 -p(1); -p(2) p(1) 0];
-    Ad = [R, zeros(3); p_sk*R, R];
-end
