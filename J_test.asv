@@ -1,0 +1,103 @@
+%% Test Function for Space Jacobian 
+addpath("Functions");
+% example from w7-L1 SL 9
+theta = [pi/2, pi/2, pi/2, pi/2];
+L1 = 2;
+L2 = 2;
+
+%%
+ws = {[0;0;1], [0;0;1], [0;0;1], [0;0;0]};
+qs = {[0;0;0], [L1*cos(theta(1));L1*sin(theta(1));0], [L1*cos(theta(1))+L2*(cos(theta(1)+theta(2))); L1*sin(theta(1))+L2*(sin(theta(1)+theta(2))); 0]...
+    [0;0;1]};
+
+J_RRRP = zeros(6,4);
+
+for i=1:4
+    wi = ws{i};
+    vi = cross(-wi, qs{i});
+    J_RRRP(:, i) = [wi; vi];
+end
+disp(J_RRRP)
+
+%% home position
+ws = {[0;0;1], [0;0;1], [0;0;1], [0;0;0]};
+qs = {[0;0;0], [L1;0;0], [L1; L2;0]...
+    [0;0;1]};
+
+J_RRRP = zeros(6,4);
+
+for i=1:4
+    wi = ws{i};
+    vi = cross(-wi, qs{i});
+    J_RRRP(:, i) = [wi; vi];
+end
+disp(J_RRRP)
+
+%%
+w1 = [0;0;1];
+q1 = [0;0;0];
+v1 = cross(-w1, q1);
+
+w2 = [0;0;1];
+q2 = [L1;0;0];
+v2 = cross(-w2, q2);
+
+w3 = [0;0;1];
+q3 = [L1; L2;0];
+v3 = cross(-w3, q3);
+
+w4 = [0;0;0];
+v4 = [0;0;1];
+
+S1 = [w1;v1];
+S2 = [w2; v2];
+S3 = [w3; v3];
+S4 = [w4; v4];
+
+S_home = [S1 S2 S3 S4];
+
+Js = J_space(S_home, theta);
+
+%% third column
+
+% Adj = eye(6);
+% n = length(theta);
+% Js = zeros(6,n);
+% Js(:,1) = Sn(:,1);
+
+    % calculate transformation for ith joint
+    T1 = screw_to_exp(S_home(:,1),theta(1));
+    disp("T1")
+    disp(T1)
+    T2 = screw_to_exp(S_home(:,2),theta(2));
+    disp("T2")
+    disp(T2)
+    T3 = screw_to_exp(S_home(:,3),theta(3));
+    disp("T3")
+    disp(T3)
+
+    %% change ith transformation to an adjoint
+    Ad1 = Adjoint(T1);
+    disp("Ad1")
+    disp(Ad1)
+    Ad2 = Adjoint(T2);
+    disp("Ad2")
+    disp(Ad2)
+    Ad3 = Adjoint(T3);
+    disp("Ad3")
+    disp(Ad3)
+
+    %% Jacobian column for i+1 column 
+    J2 = Ad1*S_home(:,2);
+    disp("J2")
+    disp(J2)
+
+    J3 = Ad1*Ad2*S_home(:,3);
+    disp("J3")
+    disp(J3)
+
+    J4 = Ad1*Ad2*Ad3*S_home(:,4);
+    disp("J4")
+    disp(J4)
+
+    
