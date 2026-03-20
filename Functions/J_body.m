@@ -7,7 +7,7 @@ function Jb = J_body(Bn, theta) % W7-L1-SL6
 
 n = length(theta);
 Jb = zeros(6,n);
-
+T = eye(4);
 % last is last screw
 Jb(:,n) = Bn(:,n);
 
