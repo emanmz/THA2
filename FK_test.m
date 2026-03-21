@@ -62,7 +62,7 @@ theta_3r = [0, pi/2, 0 ];
 % Convert to Slist
 Slist_3r = zeros(6, 3);
 for i = 1:3
-    wi = w_3r{i};
+    wi = w_3r{i};cleaned 
     vi = cross(-wi, q_3r{i}); % Space screw v calculation
     Slist_3r(:, i) = [wi; vi];
 end
