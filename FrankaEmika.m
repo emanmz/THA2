@@ -4,12 +4,12 @@
 L = [0.333 0.316 0.384 0.107];
 
 % flange offset, m
-a = 0.088;
+A = 0.088;
 
 
 % home position, https://frankarobotics.github.io/docs/robot_specifications.html#kinematic-configuration
 
-M = [1 0 0 a;
+M = [1 0 0 A;
     0 -1 0 0;
     0 0 -1 L(1)+L(2)+L(3)-L(4);
     0 0 0 1];
@@ -17,7 +17,7 @@ M = [1 0 0 a;
 % Screw axis in space frame
 
 ws = {[0;0;1], [0;-1;0], [0;0;1], [0;1;0], [0;0;1], [0;1;0], [0;0;1]};
-qs = {[0;0;0], [0;0;L(1)], [0;0;L(1)], [a;0;L(1)+L(2)], [0;0;L(1)+L(2)+L(3)], [0;0;L(1)+L(2)+L(3)], [a;0;L(1)+L(2)+L(3)-L(4)]};
+qs = {[0;0;0], [0;0;L(1)], [0;0;L(1)], [A;0;L(1)+L(2)], [0;0;L(1)+L(2)+L(3)], [0;0;L(1)+L(2)+L(3)], [A;0;L(1)+L(2)+L(3)-L(4)]};
 
 S_space = zeros(6,7);
 
@@ -37,7 +37,7 @@ disp(S_space)
 % Screw axis in body frame
 
 wb = {[0;0;-1], [0;1;0], [0;0;-1], [0;-1;0], [0;0;-1], [0;-1;0], [0;0;-1]};
-qb = {[-a;0;-L(4)+L(3)+L(2)], [-a;0;-L(4)+L(3)+L(2)], [-a;0;-L(4)+L(3)+L(2)], [0;0;-L(4)+L(3)], [-a;0;-L(4)], [-a;0;-L(4)], [0;0;0]};
+qb = {[-A;0;-L(4)+L(3)+L(2)], [-A;0;-L(4)+L(3)+L(2)], [-A;0;-L(4)+L(3)+L(2)], [0;0;-L(4)+L(3)], [-A;0;-L(4)], [-A;0;-L(4)], [0;0;0]};
 
 S_body = zeros(6,7);
 
@@ -54,15 +54,11 @@ end
 disp("S_body")
 disp(S_body)
 
-% spot check space versus body (we can delete this if wanted)
-
-S_Scheck6 = is_adj(M, S_space(:,6), S_body(:,6));
-S_Scheck4 = is_adj(M, S_space(:,4), S_body(:,4));
 
 %% Pt A&C: Forward Kinematics
 
 % arbitrary configurations
-theta = [pi pi pi pi pi pi pi]; % i dont know how to pick a test joint angles and we probably need a couple different ones... 
+theta = [0 pi/2 0 pi/2 0 pi pi/2]; % i dont know how to pick a test joint angles and we probably need a couple different ones... 
 
 % Space Form
 Emika_FKS = FK_space(M, S_space, theta);
