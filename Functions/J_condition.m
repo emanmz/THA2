@@ -1,11 +1,8 @@
 % pt. g
 function cond_num = J_condition(J) % W7-L2 slide 7
-% high values indicate closeness to a singularity.
-
-    s = svd(J);
-    % Standard definition: ratio of max to min singular values
-    cond_num = max(s) / min(s);
-    
-    % If min(s) is 0, MATLAB returns Inf, which is correct for
-% singularities 
+% Condition: Ratio of max eigenvalue to min eigenvalue of A
+% Slide: L_max / L_min
+A = get_A_matrix(J);
+ev = eig(A);
+cond_num = max(ev) / min(ev);
 end

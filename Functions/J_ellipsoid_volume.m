@@ -1,11 +1,9 @@
 % pt. g
 function vol = J_ellipsoid_volume(J) % W7-L2 slide 7
-% Calculates a value proportional to the volume
-% J: 3xn sub-Jacobian (either Jv or Jw)
+% Volume: Proportional to sqrt(det(A))
+% Slide: Volume is proportional to the product of the lengths of the semi-axes
+A = get_A_matrix(J);
 
-    % The volume of an ellipsoid with semi-axes a, b, c is (4/3)*pi*a*b*c
-    s = svd(J);
-    
-    % product of the singular values
-    vol = (4/3) * pi * prod(s);
+% slide's direct definition:
+vol = sqrt(det(A));
 end
