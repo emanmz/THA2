@@ -1,5 +1,5 @@
 addpath("Functions");
-
+close all; clear all; clc; 
 %% Franka Emika
 
 % link lengths, m
@@ -100,22 +100,28 @@ disp('Emika_JB')
 disp(Emika_JB)
 
 %% Pt F: Singularity
+J = J_space(S_space, theta); % Get your 6x7 Jacobian
+[singular, mu, rk] = singularity(J);
 
-% thetaSym = sym('theta', [1 7]);
-% % computationally heavy :P idk if we need to do something aboutthis? 
-% try
-%     Emika_sing = singularity(S_space, thetaSym); 
-%     disp('Singularity analysis initialized symbolically...');
-% catch
-%     disp('blah did not work');
-% end
+fprintf(' Singularity Analysis \n');
+fprintf('Rank: %d / 6\n', rk);
+fprintf('Manipulability Index: %.6f\n', mu);
 
-% just joint 4 singularity
-theta_test = [0, 0, 0, 0, 0, 0, 0];
-J_test = J_space(S_space, theta_test);
-manip_value = sqrt(det(J_test * J_test'));
-fprintf('Manipulability at zero position: %e\n', manip_value);
+if singular
+    disp('Status: AT OR NEAR SINGULARITY');
+else
+    disp('Status: Safe (Full Dexterity)');
+end
 %% Pt G: Manipulability Ellipsoids
+fprintf(' Manipulability Analysis \n');
+cond_num = J_condition(J);
+fprintf('Condition: %.6f\n', cond_num);
+iso = J_isotropy(J);
+fprintf('Isotropy: %.6f\n', iso);
+vol = J_ellipsoid_volume(J);
+fprintf('Ellipsoid Volume: %.6f\n', vol);
+
+
 figure('Name', 'FR3 Manipulability');
 hold on; grid on; axis equal; view(3);
 ellipsoid_plot_linear(Emika_JS, Emika_FKS); 
