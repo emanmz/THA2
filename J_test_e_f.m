@@ -62,6 +62,13 @@ Js_from_Jb = Adjoint(T_sb) * Jb_func;
 disp("--- Body to Space Adjoint Check ---")
 disp("Does Ad(Tsb)*Jb match J_space?")
 disp(all(abs(Js_from_Jb - Js_func) < 1e-6, 'all'));
+T_sb = FK_space_no_plot(M, S_space, theta);
+Ad_sb = Adjoint(T_sb);
+Js_check = Ad_sb*Jb;
+
+%% Singulairty function test
+% 
+thetaSym = sym('theta', [1 4]);
 
 % Singularity Test 
 fprintf('\n--- Singularity Analysis (Analytical) ---\n');
@@ -69,4 +76,6 @@ syms q1 q2 q3 q4 real
 thetaSym = [q1 q2 q3 q4];
 Sings = singularity(S_space, thetaSym);
 disp("Singular configurations found for:");
+disp(Sings);
+disp("SIGNULARITY TEST");
 disp(Sings);

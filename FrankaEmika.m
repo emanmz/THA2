@@ -60,7 +60,7 @@ disp(S_body)
 %% Pt A-C: Forward Kinematics
 
 % arbitrary configurations
-theta = [0 0 0 0 0 0 0]; % i dont know how to pick a test joint angles and we probably need a couple different ones... 
+theta = [0 0 0 0 0 0 0]; 
 
 % Pt A: "manually" compute space FK
 Emika_FKS_manual = screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:,2), theta(2))*...
@@ -88,11 +88,63 @@ disp('Emika_FKB')
 disp(Emika_FKB)
 
 %% Pt D: Jacobian
+ theta = [0 0 0 0 0 0 0];
+% Pt D: "manually" compute space Jacobian
+
+Js1 = S_space(:,1);
+
+Js2 = Adjoint(screw_to_exp(S_space(:,1), theta(1)))*S_space(:,2);
+
+Js3 = Adjoint(screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:, 2), theta(2)))*S_space(:,3);
+
+Js4 = Adjoint(screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:, 2), theta(2))*...
+    screw_to_exp(S_space(:, 3), theta(3)))*S_space(:,4);
+
+Js5 = Adjoint(screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:, 2), theta(2))*...
+    screw_to_exp(S_space(:, 3), theta(3))*screw_to_exp(S_space(:,4), theta(4)))*S_space(:,5);
+
+Js6 = Adjoint(screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:, 2), theta(2))*...
+    screw_to_exp(S_space(:, 3), theta(3))*screw_to_exp(S_space(:,4), theta(4))*...
+    screw_to_exp(S_space(:, 5), theta(5)))*S_space(:,6);
+
+Js7 = Adjoint(screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:, 2), theta(2))*...
+    screw_to_exp(S_space(:, 3), theta(3))*screw_to_exp(S_space(:,4), theta(4))*...
+    screw_to_exp(S_space(:, 5), theta(5))*screw_to_exp(S_space(:,6), theta(6)))*S_space(:,7);
+
+Emika_JS_Manual = [Js1 Js2 Js3 Js4 Js5 Js6 Js7];
+disp('Emika_JS_Manual')
+disp(Emika_JS_Manual)
 
 % Space Form
 Emika_JS = J_space(S_space, theta);
 disp('Emika_JS')
 disp(Emika_JS)
+
+% Pt D: "manually" compute space Jacobian
+
+  Jb1 = Adjoint(screw_to_exp(-S_body(:,7), theta(7))*screw_to_exp(-S_body(:,6), theta(6))*...
+      screw_to_exp(-S_body(:,5), theta(5))*screw_to_exp(-S_body(:,4), theta(4))*...
+      screw_to_exp(-S_body(:,3), theta(3))*screw_to_exp(-S_body(:,2), theta(2)))*S_body(:, 1);
+
+  Jb2 = Adjoint(screw_to_exp(-S_body(:,7), theta(7))*screw_to_exp(-S_body(:,6), theta(6))*...
+      screw_to_exp(-S_body(:,5), theta(5))*screw_to_exp(-S_body(:,4), theta(4))*...
+      screw_to_exp(-S_body(:,3), theta(3)))*S_body(:, 2);
+
+Jb3 = Adjoint(screw_to_exp(-S_body(:,7), theta(7))*screw_to_exp(-S_body(:,6), theta(6))*...
+      screw_to_exp(-S_body(:,5), theta(5))*screw_to_exp(-S_body(:,4), theta(4)))*S_body(:, 3);
+
+Jb4 = Adjoint(screw_to_exp(-S_body(:,7), theta(7))*screw_to_exp(-S_body(:,6), theta(6))*...
+      screw_to_exp(-S_body(:,5), theta(5)))*S_body(:, 4);
+
+Jb5 = Adjoint(screw_to_exp(-S_body(:,7), theta(7))*screw_to_exp(-S_body(:,6), theta(6)))*S_body(:, 5);
+
+Jb6 = Adjoint(screw_to_exp(-S_body(:,7), theta(7)))*S_body(:, 6);
+
+Jb7 = S_body(:,7);
+
+Emika_JB_Manual = [Jb1 Jb2 Jb3 Jb4 Jb5 Jb6 Jb7];
+disp('Emika_J_Manual')
+disp(Emika_JB_Manual)
 
 % Body Form
 Emika_JB = J_body(S_body, theta);
