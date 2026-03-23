@@ -5,5 +5,5 @@ function iso = J_isotropy(J) % W7-L2 slide 7
 
     s = svd(J);
     % Ratio of minimum singular value to maximum
-    iso = min(s) / max(s);
+    iso = sqrt(min(s)) / sqrt(max(s));
 end
