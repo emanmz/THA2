@@ -1,3 +1,4 @@
+% pt. g
 function cond_num = J_condition(J) % W7-L2 slide 7
 % high values indicate closeness to a singularity.
 

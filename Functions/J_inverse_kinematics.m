@@ -1,11 +1,12 @@
+% pt. h
 function [theta, success] = J_inverse_kinematics(Slist, M, Tsd, theta0, eomg, ev)
 % Slist: 6xn matrix of screw axes
-% M: Home configuration matrix
+% M: Home config matrix
 % Tsd: Desired end-effector configuration (4x4)
-% theta0: Initial guess for joint angles (1xn)
-% eomg: Error tolerance for orientation (rad)
-% ev: Error tolerance for translation (m)
-
+% theta0: Init guess for joint angles (1xn)
+% eomg: Error tol for orientation (rad)
+% ev: Error tol for translation (m)
+    figure('Name', 'Newton-Raphson Animation');
     max_iter = 50; % Limit iterations to prevent infinite loops
     theta = theta0;
     i = 0;
@@ -14,20 +15,18 @@ function [theta, success] = J_inverse_kinematics(Slist, M, Tsd, theta0, eomg, ev
     Tsb = FK_space(M, Slist, theta);
     [Vb, err] = calculate_twist_error(Tsb, Tsd);
     
-    % until the error is below tolerance or max its 
+    % until the error is below tolerance or hits max its 
+    
     while err && i < max_iter
-        % Calculate Space Jacobian at current theta
+        %  Space Jacobian at current theta
         Js = J_space(Slist, theta);
         
         %  Body Twist (Vb) to Space Twist (Vs) 
         Vs = Adjoint(Tsb) * Vb; 
         
-        % Newton-Raphson Update: theta_new = theta_old + pinv(J) * Vs
-        % use pinv (pseudoinverse) because the FR3 is redundant (6x7)
-        % (franka is redunt
+        % Newton-Raphson: theta_new = theta_old + pinv(J) * Vs
         theta = theta + (pinv(Js) * Vs)';
-        
-        % Update current state
+        % Update 
         i = i + 1;
         Tsb = FK_space(M, Slist, theta);
         [Vb, err] = calculate_twist_error(Tsb, Tsd);

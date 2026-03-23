@@ -1,4 +1,4 @@
-
+% pt. f
 function SingAnalysis = singularity(Sn, thetaSym)
 
 % thetaSym = 1xn matrix of symbolic joint angles

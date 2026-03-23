@@ -1,5 +1,5 @@
 addpath("Functions");
-
+% test function for pt. G
 %% Test Script (most classic example i could find) 
 clear; clc; close all;
 %  3-Link 3 revolute joint easy stuff W6-L1 slide 2 - 7 (its the fwd
@@ -23,7 +23,7 @@ Slist = [S1, S2, S3];
 
 % current Pose and Jacobian
 T = FK_space(M, Slist, theta);
-J = Jacobian_space(Slist, theta); % replace this jsut jacobian space function sarah makes later rn it random matlab forum one
+J = J_space(Slist, theta); 
 
 % split jacob
 Jw = J(1:3, :); % ang part
@@ -93,23 +93,4 @@ if ~isempty(h_lin) && ~isempty(h_ang)
     legend([h_robot, h_lin(1), h_ang(1)], ...
            {'Robot Structure', 'Linear Manipulability', 'Angular Manipulability'}, ...
            'Location', 'northeast');
-end
-
-%% Jacobian_space (taken from a matlab forum just for this example lol idk if this right 
-% (Calculates the space Jacobian for PoE) W6-L1 slide 7
-function J = Jacobian_space(Slist, theta)
-    n = length(theta);
-    J = zeros(6, n);
-    T = eye(4);
-    J(:, 1) = Slist(:, 1);
-    for i = 2:n
-        % This is the correct Adjoint implementation for the Space Jacobian
-        T = T * screw_to_exp(Slist(:, i-1), theta(i-1));
-        % Adjoint transformation to shift screw to current frame
-        R = T(1:3, 1:3);
-        p = T(1:3, 4);
-        p_sk = [0 -p(3) p(2); p(3) 0 -p(1); -p(2) p(1) 0];
-        AdT = [R, zeros(3); p_sk*R, R];
-        J(:, i) = AdT * Slist(:, i);
-    end
 end
