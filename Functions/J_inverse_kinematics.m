@@ -6,7 +6,6 @@ function [theta, success] = J_inverse_kinematics(Slist, M, Tsd, theta0, eomg, ev
 % theta0: Init guess for joint angles (1xn)
 % eomg: Error tol for orientation (rad)
 % ev: Error tol for translation (m)
-    figure('Name', 'Newton-Raphson Animation');
     max_iter = 50; % Limit iterations to prevent infinite loops
     theta = theta0;
     i = 0;
