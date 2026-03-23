@@ -101,15 +101,20 @@ disp(Emika_JB)
 
 %% Pt F: Singularity
 
-thetaSym = sym('theta', [1 7]);
-% computationally heavy :P idk if we need to do something aboutthis? 
-try
-    Emika_sing = singularity(S_space, thetaSym); 
-    disp('Singularity analysis initialized symbolically...');
-catch
-    disp('blah did not work');
-end
+% thetaSym = sym('theta', [1 7]);
+% % computationally heavy :P idk if we need to do something aboutthis? 
+% try
+%     Emika_sing = singularity(S_space, thetaSym); 
+%     disp('Singularity analysis initialized symbolically...');
+% catch
+%     disp('blah did not work');
+% end
 
+% just joint 4 singularity
+theta_test = [0, 0, 0, 0, 0, 0, 0];
+J_test = J_space(S_space, theta_test);
+manip_value = sqrt(det(J_test * J_test'));
+fprintf('Manipulability at zero position: %e\n', manip_value);
 %% Pt G: Manipulability Ellipsoids
 figure('Name', 'FR3 Manipulability');
 hold on; grid on; axis equal; view(3);

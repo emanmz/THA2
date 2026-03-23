@@ -84,6 +84,8 @@ Js_check = Ad_sb*Jb;
 thetaSym = sym('theta', [1 4]);
 
 Sings = singularity(S_space, thetaSym);
+disp("SIGNULARITY TEST");
+disp(Sings);
 %% Test Function for Space Jacobian 
 addpath("Functions");
 % example from w7-L1 SL 9
