@@ -21,6 +21,7 @@ function [theta, success] = DLS_inverse_kinematics(Slist, M, Tsd, theta0)
         % away slow closer 
         if s_min < epsilon
             lambda = (1 - (s_min/epsilon)^2) * lambda_max^2;
+            fprintf('Iteration %d: Near Singularity (s_min=%.4f). Damping engaged.\n', i, s_min);
         else
             lambda = 0;
         end
