@@ -12,7 +12,7 @@ function [theta, success] = J_inverse_kinematics(Slist, M, Tsd, theta0, eomg, ev
     i = 0;
     
     % calc current FK and the twist required to move toward target
-    Tsb = FK_space(M, Slist, theta);
+    Tsb = FK_space_no_plot(M, Slist, theta);
     [Vb, err] = calculate_twist_error(Tsb, Tsd);
     
     % until the error is below tolerance or hits max its 
@@ -28,7 +28,7 @@ function [theta, success] = J_inverse_kinematics(Slist, M, Tsd, theta0, eomg, ev
         theta = theta + (pinv(Js) * Vs)';
         % Update 
         i = i + 1;
-        Tsb = FK_space(M, Slist, theta);
+        Tsb = FK_space_no_plot(M, Slist, theta);
         [Vb, err] = calculate_twist_error(Tsb, Tsd);
     end
     

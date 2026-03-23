@@ -3,7 +3,7 @@ function plot_2link(Slist, M, theta, Tsd)
     p0 = [0; 0; 0];
     T1 = screw_to_exp(Slist(:,1), theta(1));
     p1 = T1 * [L1; 0; 0; 1];
-    Te = FK_space(M, Slist, theta);
+    Te = FK_space_no_plot(M, Slist, theta);
     p2 = Te(1:3, 4);
     
     plot([p0(1), p1(1), p2(1)], [p0(2), p1(2), p2(2)], 'k-o', 'LineWidth', 2, 'MarkerFaceColor', 'k');

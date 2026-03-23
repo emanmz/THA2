@@ -5,7 +5,7 @@ function [theta, success] = redundancy_resolution(Slist, M, Tsd, theta0)
     theta = theta0;
     
     for i = 1:max_iter
-        Tsb = FK_space(M, Slist, theta);
+        Tsb = FK_space_no_plot(M, Slist, theta);
         [Vb, err] = calculate_twist_error(Tsb, Tsd);
         if ~err, break; end
         
