@@ -58,14 +58,14 @@ disp(S_body)
 %% Pt A-C: Forward Kinematics
 
 % arbitrary configurations
-theta = [0 -pi/4 0 -3*pi/4 0 pi/2 pi/4]; % i dont know how to pick a test joint angles and we probably need a couple different ones... 
+theta = [0 0 0 0 0 0 0]; % i dont know how to pick a test joint angles and we probably need a couple different ones... 
 
 % Pt A: "manually" compute space FK
-Ts_manual = screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:,2), theta(2))*...
+Emika_FKS_manual = screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:,2), theta(2))*...
     screw_to_exp(S_space(:,3), theta(3))*screw_to_exp(S_space(:,4), theta(4))*screw_to_exp(S_space(:,5), theta(5))*...
     screw_to_exp(S_space(:,6), theta(6))*screw_to_exp(S_space(:,7), theta(7))*M;
-disp('Ts_manual')
-disp(Ts_manual)
+disp('Emika_FKS_manual')
+disp(Emika_FKS_manual)
 
 % Pt B: Compute space FK with function
 Emika_FKS = FK_space(M, S_space, theta);
@@ -73,11 +73,11 @@ disp('Emika_FKS')
 disp(Emika_FKS)
 
 % Pt C: "manually" compute space FK
-Tb_manual = M*screw_to_exp(S_body(:,1), theta(1))*screw_to_exp(S_body(:,2), theta(2))*...
+Emika_FKB_manual = M*screw_to_exp(S_body(:,1), theta(1))*screw_to_exp(S_body(:,2), theta(2))*...
     screw_to_exp(S_body(:,3), theta(3))*screw_to_exp(S_body(:,4), theta(4))*screw_to_exp(S_body(:,5), theta(5))*...
     screw_to_exp(S_body(:,6), theta(6))*screw_to_exp(S_body(:,7), theta(7));
 disp('Tb_manual')
-disp(Tb_manual)
+disp(Emika_FKB_manual)
 
 
 % Pt C: Compute body FK with function
