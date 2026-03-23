@@ -7,6 +7,7 @@ function Js = J_space(Sn, theta) % W7-L1-SL6
 
 n = length(theta);
 Js = zeros(6,n);
+T = eye(4);
 % first column is screw
 Js(:,1) = Sn(:,1);
 T = eye(4);

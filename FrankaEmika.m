@@ -1,0 +1,113 @@
+%% Franka Emika
+
+% link lengths, m
+L = [0.333 0.316 0.384 0.107];
+
+% flange offset, m
+A = 0.088;
+
+
+% home position, https://frankarobotics.github.io/docs/robot_specifications.html#kinematic-configuration
+
+M = [1 0 0 A;
+    0 -1 0 0;
+    0 0 -1 L(1)+L(2)+L(3)-L(4);
+    0 0 0 1];
+
+% Screw axis in space frame
+
+ws = {[0;0;1], [0;-1;0], [0;0;1], [0;1;0], [0;0;1], [0;1;0], [0;0;1]};
+qs = {[0;0;0], [0;0;L(1)], [0;0;L(1)], [A;0;L(1)+L(2)], [0;0;L(1)+L(2)+L(3)], [0;0;L(1)+L(2)+L(3)], [A;0;L(1)+L(2)+L(3)-L(4)]};
+
+S_space = zeros(6,7);
+
+for i=1:7
+    wi = ws{i};
+    if norm(wi) == 0
+        vi = qs{i};
+    else
+    vi = cross(-wi, qs{i});
+    end
+    
+    S_space(:, i) = [wi; vi];
+end
+disp("S_space")
+disp(S_space)
+
+% Screw axis in body frame
+
+wb = {[0;0;-1], [0;1;0], [0;0;-1], [0;-1;0], [0;0;-1], [0;-1;0], [0;0;-1]};
+qb = {[-A;0;-L(4)+L(3)+L(2)], [-A;0;-L(4)+L(3)+L(2)], [-A;0;-L(4)+L(3)+L(2)], [0;0;-L(4)+L(3)], [-A;0;-L(4)], [-A;0;-L(4)], [0;0;0]};
+
+S_body = zeros(6,7);
+
+for i=1:7
+    wi = wb{i};
+    if norm(wi) == 0
+        vi = qb{i};
+    else
+    vi = cross(-wi, qb{i});
+    end
+    
+    S_body(:, i) = [wi; vi];
+end
+disp("S_body")
+disp(S_body)
+
+
+%% Pt A-C: Forward Kinematics
+
+% arbitrary configurations
+theta = [0 -pi/4 0 -3*pi/4 0 pi/2 pi/4]; % i dont know how to pick a test joint angles and we probably need a couple different ones... 
+
+% Pt A: "manually" compute space FK
+Ts_manual = screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:,2), theta(2))*...
+    screw_to_exp(S_space(:,3), theta(3))*screw_to_exp(S_space(:,4), theta(4))*screw_to_exp(S_space(:,5), theta(5))*...
+    screw_to_exp(S_space(:,6), theta(6))*screw_to_exp(S_space(:,7), theta(7))*M;
+disp('Ts_manual')
+disp(Ts_manual)
+
+% Pt B: Compute space FK with function
+Emika_FKS = FK_space(M, S_space, theta);
+disp('Emika_FKS')
+disp(Emika_FKS)
+
+% Pt C: "manually" compute space FK
+Tb_manual = M*screw_to_exp(S_body(:,1), theta(1))*screw_to_exp(S_body(:,2), theta(2))*...
+    screw_to_exp(S_body(:,3), theta(3))*screw_to_exp(S_body(:,4), theta(4))*screw_to_exp(S_body(:,5), theta(5))*...
+    screw_to_exp(S_body(:,6), theta(6))*screw_to_exp(S_body(:,7), theta(7));
+disp('Tb_manual')
+disp(Tb_manual)
+
+
+% Pt C: Compute body FK with function
+Emika_FKB = FK_body(M, S_body, theta);
+disp('Emika_FKB')
+disp(Emika_FKB)
+
+%% Pt D: Jacobian
+
+% Space Form
+Emika_JS = J_space(S_space, theta);
+disp('Emika_JS')
+disp(Emika_JS)
+
+% Body Form
+Emika_JB = J_body(S_body, theta);
+disp('Emika_JB')
+disp(Emika_JB)
+
+%% Pt F: Singularity
+
+% Emika_sing = singularity(S_space, theta) !!NEED TO FIX FUNCTION FIRST!!
+
+%% Pt G: Manipulability Ellipsoids
+
+
+%% Pt H: Inverse Kinematics
+
+%% Pt i: Jacobian Transpose Algorithm
+
+%% Pt j: Redundancy Resolution
+
+
