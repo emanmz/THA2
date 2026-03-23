@@ -1,4 +1,4 @@
-% base 2 joint
+% % PA pt. e
 function Js = J_space(Sn, theta) % W7-L1-SL6
 
 % n = number of joints

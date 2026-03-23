@@ -1,3 +1,4 @@
+% PA pt. B
 function T = FK_space(M, Sn, theta) % W6-2 slide 6 (sort of 2-6) & W4-L1 slide 12 (fixed frame vs body frame)
 % M: 4x4 home position configuration matrix
 % Slist: 6xn matrix of spatial screw axes [wi; vi]
@@ -19,6 +20,7 @@ function T = FK_space(M, Sn, theta) % W6-2 slide 6 (sort of 2-6) & W4-L1 slide 1
        
         % multiply exponentials from left to right
         T = T * screw_to_exp(Sn(:,i), theta(i));
+        drawScrewAxis(Sn(:,i), 'r');
     end
     
     % Post-multiply by the home position
@@ -28,18 +30,3 @@ function T = FK_space(M, Sn, theta) % W6-2 slide 6 (sort of 2-6) & W4-L1 slide 1
     drawFrame(T, 0.5, '{b}');
     
 end
-
-% helper func tion to draw frames
-function drawFrame(T, scale, label)
-    % Draws a coordinate frame at configuration T
-    pos = T(1:3, 4);
-    R = T(1:3, 1:3);
-    colors = ['r', 'g', 'b']; % X=Red, Y=Green, Z=Blue
-    for i = 1:3
-        quiver3(pos(1), pos(2), pos(3), R(1,i), R(2,i), R(3,i), scale, ...
-                'Color', colors(i), 'LineWidth', 2);
-    end
-    text(pos(1), pos(2), pos(3), label, 'FontSize', 10, 'FontWeight', 'bold');
-end
-
-

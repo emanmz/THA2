@@ -1,4 +1,5 @@
 %% Test Function for Space Jacobian 
+% % PA pt. e & f test functions 
 addpath("Functions");
 
 %% SCARA Example (W7-L1 Slide 7-9)
@@ -82,7 +83,7 @@ Js_check = Ad_sb*Jb;
 % 
 thetaSym = sym('theta', [1 4]);
 
-Sings = singularity(S_space, thetaSym)
+Sings = singularity(S_space, thetaSym);
 %% Test Function for Space Jacobian 
 addpath("Functions");
 % example from w7-L1 SL 9

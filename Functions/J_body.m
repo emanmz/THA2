@@ -1,4 +1,4 @@
-% EE to base
+% % PA pt. e
 function Jb = J_body(Bn, theta) % W7-L1-SL6
 
 % n = number of joints

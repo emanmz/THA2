@@ -1,3 +1,5 @@
+addpath("Functions");
+
 %% Franka Emika
 
 % link lengths, m
@@ -99,15 +101,39 @@ disp(Emika_JB)
 
 %% Pt F: Singularity
 
-% Emika_sing = singularity(S_space, theta) !!NEED TO FIX FUNCTION FIRST!!
+thetaSym = sym('theta', [1 7]);
+% Note: This can be computationally heavy for 7-DOF; usually done for 
+% specific joint subsets (like the elbow joint 4).
+try
+    Emika_sing = singularity(S_space, thetaSym); 
+    disp('Singularity analysis initialized symbolically...');
+catch
+    disp('blah did not work');
+end
 
 %% Pt G: Manipulability Ellipsoids
-
+figure('Name', 'FR3 Manipulability');
+hold on; grid on; axis equal; view(3);
+ellipsoid_plot_linear(Emika_JS, Emika_FKS); 
+ellipsoid_plot_angular(Emika_JS, Emika_FKS);
+title('FR3 Manipulability Ellipsoids (Linear: Magenta, Angular: Green)');
 
 %% Pt H: Inverse Kinematics
+T_target = Emika_FKS;
+T_target(1,4) = T_target(1,4) + 0.05; % Move 5cm in X
+
+[theta_ik, success_ik] = J_inverse_kinematics(S_space, M, T_target, theta);
+fprintf('Standard IK Success: %d\n', success_ik);
 
 %% Pt i: Jacobian Transpose Algorithm
+[theta_trans, success_trans] = J_transpose_kinematics(S_space, M, T_target, theta);
+fprintf('Jacobian Transpose Success: %d\n', success_trans);
 
 %% Pt j: Redundancy Resolution
+[theta_red, success_red] = redundancy_resolution(S_space, M, T_target, theta);
+fprintf('Redundancy Resolution Success: %d\n', success_red);
 
-
+%% Pt k: Bonus - Damped Least Squares (DLS)
+% if the target is near a boundary
+[theta_dls, success_dls] = DLS_inverse_kinematics(S_space, M, T_target, theta);
+fprintf('DLS IK Success: %d\n', success_dls);
