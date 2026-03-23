@@ -9,16 +9,9 @@ n = length(theta);
 Js = zeros(6,n);
 % first column is screw
 Js(:,1) = Sn(:,1);
-
+T = eye(4);
 for i = 2:n
-
-    % calculate transformation for ith joint
-    Ti_prev = screw_to_exp(Sn(:,i-1),theta(i-1));
-
-    T = T * Ti_prev;
-
-    % Column i is the screw axis i transformed by the Adjoint of T
-
+    T = T * screw_to_exp(Sn(:, i-1), theta(i-1));
     Js(:, i) = Adjoint(T) * Sn(:, i);
 end
 end
