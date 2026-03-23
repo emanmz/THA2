@@ -64,7 +64,7 @@ disp("Does Ad(Tsb)*Jb match J_space?")
 disp(all(abs(Js_from_Jb - Js_func) < 1e-6, 'all'));
 T_sb = FK_space_no_plot(M, S_space, theta);
 Ad_sb = Adjoint(T_sb);
-Js_check = Ad_sb*Jb;
+Js_check = Ad_sb*Jb_func;
 
 %% Singulairty function test
 % 
