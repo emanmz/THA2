@@ -100,25 +100,25 @@ disp('Emika_JB')
 disp(Emika_JB)
 
 %% Pt F: Singularity
-J = J_space(S_space, theta); % Get your 6x7 Jacobian
-[singular, mu, rk] = singularity(J);
+syms q1 q2 q3 q4 q5 q6 q7 real
+thetaSym = [q1 q2 q3 q4 q5 q6 q7];
 
-fprintf(' Singularity Analysis \n');
-fprintf('Rank: %d / 6\n', rk);
-fprintf('Manipulability Index: %.6f\n', mu);
-
-if singular
-    disp('Status: AT OR NEAR SINGULARITY');
-else
-    disp('Status: Safe (Full Dexterity)');
+% Caution: This is computationally expensive!
+% It is often better to solve for q4 (elbow) specifically.
+try
+    SingConfig = singularity(S_space, thetaSym);
+    disp('Analytical Singular Configurations Found:');
+    disp(SingConfig);
+catch
+    disp('Symbolic solver timed out. Using numerical check instead.');
 end
 %% Pt G: Manipulability Ellipsoids
-fprintf(' Manipulability Analysis \n');
-cond_num = J_condition(J);
+fprintf('Manipulability Analysis \n');
+cond_num = J_condition(Emika_JS);
 fprintf('Condition: %.6f\n', cond_num);
-iso = J_isotropy(J);
+iso = J_isotropy(Emika_JS);
 fprintf('Isotropy: %.6f\n', iso);
-vol = J_ellipsoid_volume(J);
+vol = J_ellipsoid_volume(Emika_JS);
 fprintf('Ellipsoid Volume: %.6f\n', vol);
 
 

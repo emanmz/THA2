@@ -1,3 +1,5 @@
+addpath("Functions");
+close all; clear all; clc; 
 %% Franka Emika
 
 % link lengths, m
@@ -58,14 +60,14 @@ disp(S_body)
 %% Pt A-C: Forward Kinematics
 
 % arbitrary configurations
-theta = [0 pi/2 0 pi/2 0 pi pi/2]; % i dont know how to pick a test joint angles and we probably need a couple different ones... 
+theta = [0 0 0 0 0 0 0]; % i dont know how to pick a test joint angles and we probably need a couple different ones... 
 
 % Pt A: "manually" compute space FK
-Ts_manual = screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:,2), theta(2))*...
-    screw_to_exp(S_space(:,3), theta(3))*screw_to_exp(S_space(:,4), theta(4))*screw_to_exp(Sn(:,5), theta(5))*...
-    screw_to_exp(Sn(:,6), theta(6))*screw_to_exp(Sn(:,7), theta(7))*M;
-disp('Ts_manual')
-disp(Ts_manual)
+Emika_FKS_manual = screw_to_exp(S_space(:,1), theta(1))*screw_to_exp(S_space(:,2), theta(2))*...
+    screw_to_exp(S_space(:,3), theta(3))*screw_to_exp(S_space(:,4), theta(4))*screw_to_exp(S_space(:,5), theta(5))*...
+    screw_to_exp(S_space(:,6), theta(6))*screw_to_exp(S_space(:,7), theta(7))*M;
+disp('Emika_FKS_manual')
+disp(Emika_FKS_manual)
 
 % Pt B: Compute space FK with function
 Emika_FKS = FK_space(M, S_space, theta);
@@ -73,11 +75,11 @@ disp('Emika_FKS')
 disp(Emika_FKS)
 
 % Pt C: "manually" compute space FK
-Tb_manual = M*screw_to_exp(Sn(:,1), theta(1))*screw_to_exp(Sn(:,2), theta(2))*...
-    screw_to_exp(Sn(:,3), theta(3))*screw_to_exp(Sn(:,4), theta(4))*screw_to_exp(Sn(:,5), theta(5))*...
-    screw_to_exp(Sn(:,6), theta(6))*screw_to_exp(Sn(:,7), theta(7));
+Emika_FKB_manual = M*screw_to_exp(S_body(:,1), theta(1))*screw_to_exp(S_body(:,2), theta(2))*...
+    screw_to_exp(S_body(:,3), theta(3))*screw_to_exp(S_body(:,4), theta(4))*screw_to_exp(S_body(:,5), theta(5))*...
+    screw_to_exp(S_body(:,6), theta(6))*screw_to_exp(S_body(:,7), theta(7));
 disp('Tb_manual')
-disp(Tb_manual)
+disp(Emika_FKB_manual)
 
 
 % Pt C: Compute body FK with function
@@ -98,16 +100,51 @@ disp('Emika_JB')
 disp(Emika_JB)
 
 %% Pt F: Singularity
+syms q1 q2 q3 q4 q5 q6 q7 real
+thetaSym = [q1 q2 q3 q4 q5 q6 q7];
 
-% Emika_sing = singularity(S_space, theta) !!NEED TO FIX FUNCTION FIRST!!
-
+% Caution: This is computationally expensive!
+% It is often better to solve for q4 (elbow) specifically.
+try
+    SingConfig = singularity(S_space, thetaSym);
+    disp('Analytical Singular Configurations Found:');
+    disp(SingConfig);
+catch
+    disp('Symbolic solver timed out. Using numerical check instead.');
+end
 %% Pt G: Manipulability Ellipsoids
+fprintf(' Manipulability Analysis \n');
+cond_num = J_condition(Emika_JS);
+fprintf('Condition: %.6f\n', cond_num);
+iso = J_isotropy(Emika_JS);
+fprintf('Isotropy: %.6f\n', iso);
+vol = J_ellipsoid_volume(Emika_JS);
+fprintf('Ellipsoid Volume: %.6f\n', vol);
 
+
+figure('Name', 'FR3 Manipulability');
+hold on; grid on; axis equal; view(3);
+ellipsoid_plot_linear(Emika_JS, Emika_FKS); 
+ellipsoid_plot_angular(Emika_JS, Emika_FKS);
+title('FR3 Manipulability Ellipsoids (Linear: Magenta, Angular: Green)');
 
 %% Pt H: Inverse Kinematics
+T_target = Emika_FKS;
+T_target(1,4) = T_target(1,4) + 0.05; % Move 5cm in X
+
+[theta_ik, success_ik] = J_inverse_kinematics(S_space, M, T_target, theta);
+fprintf('Standard IK Success: %d\n', success_ik);
 
 %% Pt i: Jacobian Transpose Algorithm
+[theta_trans, success_trans] = J_transpose_kinematics(S_space, M, T_target, theta);
+fprintf('Jacobian Transpose Success: %d\n', success_trans);
 
 %% Pt j: Redundancy Resolution
+[theta_red, success_red] = redundancy_resolution(S_space, M, T_target, theta);
+fprintf('Redundancy Resolution Success: %d\n', success_red);
 
+%% Pt k: Bonus - Damped Least Squares (DLS)
+% if the target is near a boundary
+[theta_dls, success_dls] = DLS_inverse_kinematics(S_space, M, T_target, theta);
+fprintf('DLS IK Success: %d\n', success_dls);
 
