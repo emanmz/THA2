@@ -143,7 +143,7 @@ Jb6 = Adjoint(screw_to_exp(-S_body(:,7), theta(7)))*S_body(:, 6);
 Jb7 = S_body(:,7);
 
 Emika_JB_Manual = [Jb1 Jb2 Jb3 Jb4 Jb5 Jb6 Jb7];
-disp('Emika_J_Manual')
+disp('Emika_JB_Manual')
 disp(Emika_JB_Manual)
 
 % Body Form
