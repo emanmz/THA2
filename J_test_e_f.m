@@ -79,3 +79,16 @@ disp("Singular configurations found for:");
 disp(Sings);
 disp("SIGNULARITY TEST");
 disp(Sings);
+
+fprintf('\nNumerical Rank Verification \n');
+test_range = linspace(-pi, pi, 50);
+singular_angles = [];
+for val = test_range
+    % Check if rank drops when theta2 = val
+    J_temp = J_space(S_space, [0.1, val, 0.1, 0.1]); 
+    if rank(J_temp) < 4
+        singular_angles = [singular_angles, val];
+    end
+end
+
+disp(singular_angles);
