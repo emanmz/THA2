@@ -1,6 +1,7 @@
 %% Pt M: Bonus - Robotic System Toolbox Simulation
 % rigid body tree object
 % link lengths, m
+close all;
 L = [0.333 0.316 0.384 0.107];
 
 % flange offset, m
@@ -66,16 +67,15 @@ end
 
 % Visualization and Comparison
 % Toolbox wants 1x7 row vector
+theta = [0 0 0 0 0 0 0];
+
 config = theta; 
 
 % Compute Toolbox FK
 T_toolbox = getTransform(robot, config, 'link7');
 
-% with PoE results
-error_toolbox = norm(Emika_FKS - T_toolbox);
 
 fprintf('\n Robotic Toolbox Bonus \n');
-fprintf('Toolbox FK Equivalence Error: %e\n', error_toolbox);
 
 % Graphical Simulation Window
 figure('Name', 'Franka Emika FR3 Simulation');
