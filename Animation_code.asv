@@ -1,0 +1,60 @@
+% link lengths, m
+L = [0.333 0.316 0.384 0.107];
+
+% flange offset, m
+A = 0.088;
+
+
+% home position, https://frankarobotics.github.io/docs/robot_specifications.html#kinematic-configuration
+
+M = [1 0 0 A;
+    0 -1 0 0;
+    0 0 -1 L(1)+L(2)+L(3)-L(4);
+    0 0 0 1];
+
+% Screw axis in space frame
+
+ws = {[0;0;1], [0;-1;0], [0;0;1], [0;1;0], [0;0;1], [0;1;0], [0;0;1]};
+qs = {[0;0;0], [0;0;L(1)], [0;0;L(1)], [A;0;L(1)+L(2)], [0;0;L(1)+L(2)+L(3)], [0;0;L(1)+L(2)+L(3)], [A;0;L(1)+L(2)+L(3)-L(4)]};
+
+S_space = zeros(6,7);
+
+for i=1:7
+    wi = ws{i};
+    if norm(wi) == 0
+        vi = qs{i};
+    else
+    vi = cross(-wi, qs{i});
+    end
+    
+    S_space(:, i) = [wi; vi];
+end
+disp("S_space")
+disp(S_space)
+
+% Screw axis in body frame
+
+wb = {[0;0;-1], [0;1;0], [0;0;-1], [0;-1;0], [0;0;-1], [0;-1;0], [0;0;-1]};
+qb = {[-A;0;-L(4)+L(3)+L(2)], [-A;0;-L(4)+L(3)+L(2)], [-A;0;-L(4)+L(3)+L(2)], [0;0;-L(4)+L(3)], [-A;0;-L(4)], [-A;0;-L(4)], [0;0;0]};
+
+S_body = zeros(6,7);
+
+for i=1:7
+    wi = wb{i};
+    if norm(wi) == 0
+        vi = qb{i};
+    else
+    vi = cross(-wi, qb{i});
+    end
+    
+    S_body(:, i) = [wi; vi];
+end
+disp("S_body")
+disp(S_body)
+
+
+%%
+% singularity configurations
+theta = [0 0 0 0 0 0 0]; 
+theta = [0 -32.08 0 -170.17 0 0 45]; % (in degrees) Packing/transport pose
+theta = [0 -pi/4 0 -3*pi/4 0, pi/2 pi/4] % Ready position
