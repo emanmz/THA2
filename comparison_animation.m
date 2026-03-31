@@ -35,9 +35,9 @@ pose_ready   = [0, -0.4, 0, -2.0, 0, 1.5, 0.7];
 pose_packing = [0, 0.5, 0, -2.5, 0, 1.0, 0];
 
 %% Choose ONE identical motion for all methods
-% Example: Ready -> Home
-theta_start = pose_ready;
-theta_goal  = pose_home;
+% Example: Packing -> Ready
+theta_start = pose_packing;
+theta_goal  = pose_ready;
 
 T_start = FK_space_no_plot(M, S_space, theta_start);
 T_end   = FK_space_no_plot(M, S_space, theta_goal);
@@ -54,22 +54,22 @@ max_iter   = 100;
 %% =========================
 %  RUN ALL METHODS
 %  =========================
-fprintf('\n=== Running Pseudoinverse IK (Ready -> Home) ===\n');
+fprintf('\n=== Running Pseudoinverse IK (Packing -> Ready) ===\n');
 results_IK = animate_transition_common( ...
     'IK', T_start, T_end, theta_start, S_space, M, qs, ...
     steps, pause_time, eomg, ev, max_iter, 'ik_comparison.gif');
 
-fprintf('\n=== Running Jacobian Transpose (Ready -> Home) ===\n');
+fprintf('\n=== Running Jacobian Transpose (Packing -> Ready) ===\n');
 results_JT = animate_transition_common( ...
     'JT', T_start, T_end, theta_start, S_space, M, qs, ...
     steps, pause_time, eomg_T, ev_T, max_iter, 'jt_comparison.gif');
 
-fprintf('\n=== Running Redundancy Resolution (Ready -> Home) ===\n');
+fprintf('\n=== Running Redundancy Resolution (Packing -> Ready) ===\n');
 results_RR = animate_transition_common( ...
     'RR', T_start, T_end, theta_start, S_space, M, qs, ...
     steps, pause_time, eomg, ev, max_iter, 'rr_comparison.gif');
 
-fprintf('\n=== Running Damped Least Squares (Ready -> Home) ===\n');
+fprintf('\n=== Running Damped Least Squares (Packing -> Ready) ===\n');
 results_DLS = animate_transition_common( ...
     'DLS', T_start, T_end, theta_start, S_space, M, qs, ...
     steps, pause_time, eomg, ev, max_iter, 'dls_comparison.gif');
