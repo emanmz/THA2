@@ -39,16 +39,16 @@ T_ready   = FK_space_no_plot(M, S_space, pose_ready);
 
 % Define the IMPOSSIBLE target
 T_extreme = T_home;
-T_extreme(3,4) = T_extreme(3,4) + 0.8; % Push way past reach
+T_extreme(3,4) = T_extreme(3,4) + 0.2; % Push way past reach
 
 %% Run Animations
 fprintf('\n=== Running Success Trajectory (Ready -> Home) ===\n');
 % Notice: T_ready matches pose_ready
-animate_transition_IK_cartesian(T_ready, T_home, pose_ready, S_space, M, qs, steps, pause_time, eomg, ev);
+% animate_transition_IK_cartesian(T_ready, T_home, pose_ready, S_space, M, qs, steps, pause_time, eomg, ev);
 
-fprintf('\n=== Running Failure Trajectory (Home -> Impossible) ===\n');
+fprintf('\n=== Running Failure Trajectory (T_packing -> T_ready) ===\n');
 % Notice: T_home matches pose_home
-% animate_transition_IK_cartesian(T_home, T_ready, pose_home, S_space, M, qs, steps, pause_time, eomg, ev);
+animate_transition_IK_cartesian(T_ready, T_extreme, pose_ready, S_space, M, qs, steps, pause_time, eomg, ev);
 %% --- Core Functions ---
 
 function animate_transition_IK_cartesian(T_start, T_end, theta_init, Slist, M, qs, steps, pause_time, eomg, ev)
