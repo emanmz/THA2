@@ -35,43 +35,42 @@ pose_ready   = [0, -0.4, 0, -2.0, 0, 1.5, 0.7];
 pose_packing = [0, 0.5, 0, -2.5, 0, 1.0, 0];
 
 %% Choose ONE identical motion for all methods
-% Example: Packing -> Ready
-theta_start = pose_packing;
-theta_goal  = pose_ready;
+% Example: Ready -> Home (Extreme)
+theta_start = pose_ready;
+theta_goal  = pose_home;
 
 T_start = FK_space_no_plot(M, S_space, theta_start);
 T_end   = FK_space_no_plot(M, S_space, theta_goal);
+T_extreme = T_end;
+T_extreme(3,4) = T_extreme(3,4) + 0.6; % Push way past reach
+
 
 %% Common parameters (IDENTICAL for all)
 steps      = 200;
-stepsT      = 500;
-
 pause_time = 0.01;
 eomg       = 1e-3;
 ev         = 1e-3;
-eomg_T       = 1e-2;
-ev_T         = 1e-2;
 max_iter   = 100;
 
 %% =========================
 %  RUN ALL METHODS
 %  =========================
-fprintf('\n=== Running Pseudoinverse IK (Packing -> Ready) ===\n');
+fprintf('\n=== Running Pseudoinverse IK (Ready -> Home (Extreme)) ===\n');
 results_IK = animate_transition_common( ...
     'IK', T_start, T_end, theta_start, S_space, M, qs, ...
     steps, pause_time, eomg, ev, max_iter, 'ik_comparison.gif');
 
-fprintf('\n=== Running Jacobian Transpose (Packing -> Ready) ===\n');
+fprintf('\n=== Running Jacobian Transpose (Ready -> Home (Extreme)) ===\n');
 results_JT = animate_transition_common( ...
     'JT', T_start, T_end, theta_start, S_space, M, qs, ...
-    stepsT, pause_time, eomg_T, ev_T, max_iter, 'jt_comparison.gif');
+    steps, pause_time, eomg, ev, max_iter, 'jt_comparison.gif');
 
-fprintf('\n=== Running Redundancy Resolution (Packing -> Ready) ===\n');
+fprintf('\n=== Running Redundancy Resolution (Ready -> Home (Extreme)) ===\n');
 results_RR = animate_transition_common( ...
     'RR', T_start, T_end, theta_start, S_space, M, qs, ...
     steps, pause_time, eomg, ev, max_iter, 'rr_comparison.gif');
 
-fprintf('\n=== Running Damped Least Squares (Packing -> Ready) ===\n');
+fprintf('\n=== Running Damped Least Squares (Ready -> Home (Extreme)) ===\n');
 results_DLS = animate_transition_common( ...
     'DLS', T_start, T_end, theta_start, S_space, M, qs, ...
     steps, pause_time, eomg, ev, max_iter, 'dls_comparison.gif');
@@ -79,217 +78,177 @@ results_DLS = animate_transition_common( ...
 %% Summary comparison
 print_comparison_all({results_IK, results_JT, results_RR, results_DLS});
 
-%% =========================================================
-%  COMMON ANIMATION / DRIVER
-%  =========================================================
 function results = animate_transition_common(method, T_start, T_end, theta_init, ...
     Slist, M, qs, steps, pause_time, eomg, ev, max_iter, gif_filename)
-
-    % Cartesian interpolation (same for all)
+    
     T_rel   = inv(T_start) * T_end;
     V_rel   = MatrixLog6(T_rel);
     se3_rel = VecTose3(V_rel);
-
     theta_guess = theta_init;
 
-    % -------- Figure 1: Animation figure --------
-    h_fig = figure('Color','w','WindowState','maximized', ...
-                   'Name', [upper(method) ' Animation']);
+    % -------- Reset GIF file so reruns don't append to old one --------
+    if exist(gif_filename, 'file')
+        delete(gif_filename);
+    end
 
-    % -------- Figure 2: Metrics figure (separate live plot) --------
-    h_metrics = figure('Color','w','Name', [upper(method) ' Metrics']);
-    tiledlayout(2,1);
+    % -------- Figures Setup --------
+    h_fig = figure('Color','w', 'WindowState','maximized', ...
+        'Name', [upper(method) ' Animation']);
+    
+    h_metrics = figure('Color','w', 'Position', [100 100 800 900], ...
+        'Name', [upper(method) ' Detailed Metrics']);
+    tiledlayout(4,1);
+    
+    ax1 = nexttile; hold on; grid on; title('Angular Condition Number'); ylabel('cond(Jw)');
+    h_cond_ang = plot(ax1, nan, nan, 'Color', [0.6350 0.0780 0.1840], 'LineWidth', 1.5);
 
-    ax1 = nexttile;
-    hold(ax1, 'on'); grid(ax1, 'on');
-    title(ax1, [upper(method) ' Condition Number']);
-    xlabel(ax1, 'Path Step'); ylabel(ax1, 'cond(J)');
-    h_cond = plot(ax1, nan, nan, 'LineWidth', 1.8);
+    ax2 = nexttile; hold on; grid on; title('Linear Condition Number'); ylabel('cond(Jv)');
+    h_cond_lin = plot(ax2, nan, nan, 'Color', [0 0.4470 0.7410], 'LineWidth', 1.5);
 
-    ax2 = nexttile;
-    hold(ax2, 'on'); grid(ax2, 'on');
-    title(ax2, [upper(method) ' Isotropy']);
-    xlabel(ax2, 'Path Step'); ylabel(ax2, 'Isotropy');
-    h_iso = plot(ax2, nan, nan, '--', 'LineWidth', 1.8);
+    ax3 = nexttile; hold on; grid on; title('Angular Isotropy'); ylabel('iso(Jw)');
+    h_iso_ang = plot(ax3, nan, nan, '--', 'Color', [0.6350 0.0780 0.1840], 'LineWidth', 1.5);
 
-    % Preallocate histories
-    cond_hist    = nan(steps,1);
-    iso_hist     = nan(steps,1);
-    mu_lin_hist  = nan(steps,1);
-    mu_ang_hist  = nan(steps,1);
-    iter_hist    = nan(steps,1);
-    time_hist    = nan(steps,1);
-    pos_err_hist = nan(steps,1);
-    ang_err_hist = nan(steps,1);
-    lin_err_hist = nan(steps,1);
-    succ_hist    = false(steps,1);
+    ax4 = nexttile; hold on; grid on; title('Linear Isotropy'); ylabel('iso(Jv)');
+    h_iso_lin = plot(ax4, nan, nan, '--', 'Color', [0 0.4470 0.7410], 'LineWidth', 1.5);
+
+    xlabel('Path Step');
+
+    % Preallocate
+    cond_ang_hist = nan(steps,1); cond_lin_hist = nan(steps,1);
+    iso_ang_hist  = nan(steps,1); iso_lin_hist  = nan(steps,1);
+    mu_lin_hist   = nan(steps,1); mu_ang_hist   = nan(steps,1);
+    iter_hist     = nan(steps,1); time_hist     = nan(steps,1);
+    pos_err_hist  = nan(steps,1); succ_hist     = false(steps,1);
+
+    eps_svd = 1e-8;
 
     for t = 1:steps
-        s   = (t-1)/(steps-1);
+        s = (t-1)/(steps-1);
         Tsd = T_start * MatrixExp6(se3_rel, s);
 
-        % Solve one waypoint with chosen method
         switch upper(method)
             case 'IK'
-                [theta_sol, success, info, solve_time] = IK_solver_step( ...
-                    Slist, M, Tsd, theta_guess, eomg, ev, max_iter);
-
+                [theta_sol, success, info, solve_time] = IK_solver_step(Slist, M, Tsd, theta_guess, eomg, ev, max_iter);
             case 'JT'
-                [theta_sol, success, info, solve_time] = JT_solver_step( ...
-                    Slist, M, Tsd, theta_guess, eomg, ev, max_iter);
-
+                [theta_sol, success, info, solve_time] = JT_solver_step(Slist, M, Tsd, theta_guess, eomg, ev, max_iter);
             case 'RR'
-                [theta_sol, success, info, solve_time] = RR_solver_step( ...
-                    Slist, M, Tsd, theta_guess, eomg, ev, max_iter);
-
+                [theta_sol, success, info, solve_time] = RR_solver_step(Slist, M, Tsd, theta_guess, eomg, ev, max_iter);
             case 'DLS'
-                [theta_sol, success, info, solve_time] = DLS_solver_step( ...
-                    Slist, M, Tsd, theta_guess, eomg, ev, max_iter);
-
+                [theta_sol, success, info, solve_time] = DLS_solver_step(Slist, M, Tsd, theta_guess, eomg, ev, max_iter);
             otherwise
                 error('Unknown method: %s', method);
         end
 
         theta_guess = theta_sol;
 
-        % Current state
-        T_curr = FK_space_no_plot(M, Slist, theta_guess);
+        % Sub-Jacobians
         Js = J_space(Slist, theta_guess);
+        Jw = Js(1:3,:);
+        Jv = Js(4:6,:);
 
-        Jw = Js(1:3,:);   % angular manipulability ellipsoid
-        Jv = Js(4:6,:);   % linear manipulability ellipsoid
+        % SVD for angular/linear metrics (safe near singularity)
+        sw = svd(Jw);
+        sv = svd(Jv);
 
-        % Metrics
-        svals = svd(Js);
-        sigma_max = max(svals);
-        sigma_min = min(svals);
-
-        if sigma_min < 1e-12
-            condJ = inf;
-            isoJ  = 0;
+        if sw(end) < eps_svd
+            cond_ang_hist(t) = Inf;
+            iso_ang_hist(t)  = 0;
         else
-            condJ = sigma_max / sigma_min;
-            isoJ  = sigma_min / sigma_max;
+            cond_ang_hist(t) = sw(1) / sw(end);
+            iso_ang_hist(t)  = sw(end) / sw(1);
         end
 
-        % Yoshikawa measures
-        A_lin = Jv * Jv.';
-        mu_lin = sqrt(max(det(A_lin), 0));
+        if sv(end) < eps_svd
+            cond_lin_hist(t) = Inf;
+            iso_lin_hist(t)  = 0;
+        else
+            cond_lin_hist(t) = sv(1) / sv(end);
+            iso_lin_hist(t)  = sv(end) / sv(1);
+        end
 
-        A_ang = Jw * Jw.';
-        mu_ang = sqrt(max(det(A_ang), 0));
+        % Yoshikawa / Errors
+        mu_ang_hist(t) = sqrt(max(det(Jw * Jw'), 0));
+        mu_lin_hist(t) = sqrt(max(det(Jv * Jv'), 0));
 
-        % Store histories
-        cond_hist(t)     = condJ;
-        iso_hist(t)      = isoJ;
-        mu_lin_hist(t)   = mu_lin;
-        mu_ang_hist(t)   = mu_ang;
-        iter_hist(t)     = info.iters;
-        time_hist(t)     = solve_time;
-        pos_err_hist(t)  = norm(T_curr(1:3,4) - Tsd(1:3,4));
-        ang_err_hist(t)  = info.w_err;
-        lin_err_hist(t)  = info.v_err;
-        succ_hist(t)     = success;
+        iter_hist(t) = info.iters;
+        time_hist(t) = solve_time;
 
-        % -------- Animation Plot --------
+        T_curr = FK_space_no_plot(M, Slist, theta_guess);
+        pos_err_hist(t) = norm(T_curr(1:3,4) - Tsd(1:3,4));
+        succ_hist(t) = success;
+
+        % -------- Update Metrics Plot --------
+        if isvalid(h_metrics)
+            set(h_cond_ang, 'XData', 1:t, 'YData', cond_ang_hist(1:t));
+            set(h_cond_lin, 'XData', 1:t, 'YData', cond_lin_hist(1:t));
+            set(h_iso_ang,  'XData', 1:t, 'YData', iso_ang_hist(1:t));
+            set(h_iso_lin,  'XData', 1:t, 'YData', iso_lin_hist(1:t));
+            drawnow limitrate;
+        end
+        
+        % -------- Draw Animation Figure --------
         figure(h_fig);
         clf;
 
         subplot(2,2,[1 3]);
         hold on; grid on; axis equal; view(3);
-        axis([-0.8 0.8 -0.8 0.8 -0.1 1.2]);
-
         draw_arm_fixed(Slist, M, theta_guess, qs);
-        plot3(Tsd(1,4), Tsd(2,4), Tsd(3,4), 'r*', 'MarkerSize', 10, 'LineWidth', 1.5);
-        plot3(T_start(1,4), T_start(2,4), T_start(3,4), 'go', 'MarkerSize', 8, 'LineWidth', 1.5);
-        plot3(T_end(1,4),   T_end(2,4),   T_end(3,4),   'bx', 'MarkerSize', 10, 'LineWidth', 2);
+        title(sprintf('%s | Step %d/%d', upper(method), t, steps));
+        xlabel('X'); ylabel('Y'); zlabel('Z');
 
-        % Better status labeling
-        if success
-            status_str = 'OK';
-        elseif pos_err_hist(t) < 1e-2
-            status_str = 'CLOSE (NO CONV)';
-        else
-            status_str = 'NO CONV';
-        end
-
-        title(sprintf(['%s | Step %d/%d | %s\n' ...
-                       'iters=%d | step time=%.4fs\n' ...
-                       'w err=%.2e | v err=%.2e | pos err=%.2e'], ...
-                       upper(method), t, steps, status_str, ...
-                       info.iters, solve_time, info.w_err, info.v_err, pos_err_hist(t)));
-
-        % Linear manipulability ellipsoid
         subplot(2,2,2);
-        hold on; grid on; axis equal; view(3);
         plot_ellipsoid(Jv);
-        title(sprintf('Linear Manipulability Ellipsoid | \\mu_v = %.3e', mu_lin));
-        xlabel('x'); ylabel('y'); zlabel('z');
+        title('Linear Ellipsoid');
+        axis equal; grid on; view(3);
 
-        % Angular manipulability ellipsoid
         subplot(2,2,4);
-        hold on; grid on; axis equal; view(3);
         plot_ellipsoid(Jw);
-        title(sprintf('Angular Manipulability Ellipsoid | \\mu_\\omega = %.3e', mu_ang));
-        xlabel('\omega_x'); ylabel('\omega_y'); zlabel('\omega_z');
+        title('Angular Ellipsoid');
+        axis equal; grid on; view(3);
 
         drawnow;
 
-        % -------- Update separate metrics figure --------
-        if isvalid(h_metrics)
-            set(h_cond, 'XData', 1:t, 'YData', cond_hist(1:t));
-            set(h_iso,  'XData', 1:t, 'YData', iso_hist(1:t));
-
-            xlim(ax1, [1 steps]);
-            xlim(ax2, [1 steps]);
-
-            if any(isfinite(cond_hist(1:t)))
-                ymax = max(cond_hist(isfinite(cond_hist(1:t))));
-                ylim(ax1, [0, max(1, 1.05*ymax)]);
-            end
-            ylim(ax2, [0, 1]);
-
-            drawnow limitrate;
-        end
-
-        % GIF
+        % -------- Capture & Save GIF Frame --------
         frame = getframe(h_fig);
         im = frame2im(frame);
         [imind, cm] = rgb2ind(im, 256);
 
         if t == 1
-            imwrite(imind, cm, gif_filename, 'gif', 'Loopcount', inf, 'DelayTime', pause_time);
+            imwrite(imind, cm, gif_filename, 'gif', ...
+                'Loopcount', inf, 'DelayTime', pause_time);
         else
-            imwrite(imind, cm, gif_filename, 'gif', 'WriteMode', 'append', 'DelayTime', pause_time);
+            imwrite(imind, cm, gif_filename, 'gif', ...
+                'WriteMode', 'append', 'DelayTime', pause_time);
         end
-
-        pause(pause_time);
     end
 
-    fprintf('%s GIF saved as: %s\n', upper(method), gif_filename);
-
-    % Return results
+    % -------- Populate Results Structure --------
     results.method        = upper(method);
-    results.cond_hist     = cond_hist;
-    results.iso_hist      = iso_hist;
+    results.cond_ang_hist = cond_ang_hist;
+    results.cond_lin_hist = cond_lin_hist;
+    results.iso_ang_hist  = iso_ang_hist;
+    results.iso_lin_hist  = iso_lin_hist;
     results.mu_lin_hist   = mu_lin_hist;
     results.mu_ang_hist   = mu_ang_hist;
     results.iter_hist     = iter_hist;
     results.time_hist     = time_hist;
     results.pos_err_hist  = pos_err_hist;
-    results.ang_err_hist  = ang_err_hist;
-    results.lin_err_hist  = lin_err_hist;
     results.succ_hist     = succ_hist;
-    results.final_theta   = theta_guess;
+
+    % Fields required by print_comparison_all
     results.total_time    = sum(time_hist);
     results.avg_time      = mean(time_hist);
     results.avg_iters     = mean(iter_hist);
-    results.max_cond      = max(cond_hist(isfinite(cond_hist)));
-    results.min_iso       = min(iso_hist);
     results.success_rate  = mean(succ_hist) * 100;
     results.final_pos_err = pos_err_hist(end);
-end
 
+    results.max_cond_ang  = max(results.cond_ang_hist);
+    results.min_iso_ang   = min(results.iso_ang_hist);
+    results.max_cond_lin  = max(results.cond_lin_hist);
+    results.min_iso_lin   = min(results.iso_lin_hist);
+
+    fprintf('%s GIF saved: %s\n', upper(method), gif_filename);
+end
 %% =========================================================
 %  PSEUDOINVERSE IK SOLVER
 %  =========================================================
@@ -498,59 +457,86 @@ end
 %  FINAL COMPARISON PRINT (ALL METHODS)
 %  =========================================================
 function print_comparison_all(results_cell)
-    n = length(results_cell);
+n = length(results_cell);
 
-    fprintf('\n================================================================================================================\n');
-    fprintf('FINAL COMPARISON: ALL METHODS\n');
-    fprintf('================================================================================================================\n');
-    fprintf('%-22s', 'Metric');
-    for k = 1:n
-        fprintf(' | %-12s', results_cell{k}.method);
-    end
-    fprintf('\n');
-    fprintf(repmat('-',1,22 + 15*n));
-    fprintf('\n');
+fprintf('\n================================================================================================================\n');
+fprintf('FINAL COMPARISON: ALL METHODS\n');
+fprintf('================================================================================================================\n');
+fprintf('%-22s', 'Metric');
+for k = 1:n
+    fprintf(' | %-12s', results_cell{k}.method);
+end
+fprintf('\n');
+fprintf(repmat('-',1,22 + 15*n));
+fprintf('\n');
 
-    print_metric_row('Total Time (s)',      results_cell, 'total_time');
-    print_metric_row('Avg Step Time (s)',   results_cell, 'avg_time');
-    print_metric_row('Avg Internal Iters',  results_cell, 'avg_iters');
-    print_metric_row('Success Rate (%)',    results_cell, 'success_rate');
-    print_metric_row('Final Pos Error',     results_cell, 'final_pos_err', true);
-    print_metric_row('Worst cond(J)',       results_cell, 'max_cond');
-    print_metric_row('Worst Isotropy',      results_cell, 'min_iso');
-    print_metric_mean_row('Avg Linear Mu',  results_cell, 'mu_lin_hist', true);
-    print_metric_mean_row('Avg Angular Mu', results_cell, 'mu_ang_hist', true);
+print_metric_row('Total Time (s)',      results_cell, 'total_time');
+print_metric_row('Avg Step Time (s)',   results_cell, 'avg_time');
+print_metric_row('Avg Internal Iters',  results_cell, 'avg_iters');
+print_metric_row('Success Rate (%)',    results_cell, 'success_rate');
+print_metric_row('Final Pos Error',     results_cell, 'final_pos_err', true);
+print_metric_row('Worst cond(J) Ang',       results_cell, 'max_cond_ang');
+print_metric_row('Worst cond(J) Lin',       results_cell, 'max_cond_lin');
+print_metric_row('Worst Isotropy Ang',      results_cell, 'min_iso_ang');
+print_metric_row('Worst Isotropy Lin',      results_cell, 'min_iso_lin');
+print_metric_mean_row('Avg Linear Mu',  results_cell, 'mu_lin_hist', true);
+print_metric_mean_row('Avg Angular Mu', results_cell, 'mu_ang_hist', true);
 
-    fprintf('================================================================================================================\n');
+fprintf('================================================================================================================\n');
+% results.max_cond_ang      = max(results.cond_ang_hist);
+%     results.min_iso_ang       = min(results.iso_ang_hist);
+%     results.max_cond_lin      = max(results.cond_lin_hist);
+%     results.min_iso_lin       = min(results.iso_lin_hist);
 
-    % Overlay plots
-    figure('Color','w','Name','All Method Comparison');
-    tiledlayout(3,1);
+% Overlay plots (FIXED: separate angular and linear metrics)
+figure('Color','w','Name','All Method Comparison');
+tiledlayout(5,1);
 
-    nexttile; hold on; grid on;
-    for k = 1:n
-        plot(results_cell{k}.cond_hist, 'LineWidth', 1.6);
-    end
-    ylabel('cond(J)');
-    title('Condition Number Comparison');
-    legend(cellfun(@(r) r.method, results_cell, 'UniformOutput', false), 'Location', 'best');
+% ---------------- Angular Condition Number ----------------
+nexttile; hold on; grid on;
+for k = 1:n
+    plot(results_cell{k}.cond_ang_hist, 'LineWidth', 1.6);
+end
+ylabel('cond(J_w)');
+title('Angular Condition Number Comparison');
+legend(cellfun(@(r) r.method, results_cell, 'UniformOutput', false), 'Location', 'best');
 
-    nexttile; hold on; grid on;
-    for k = 1:n
-        plot(results_cell{k}.iso_hist, 'LineWidth', 1.6);
-    end
-    ylabel('Isotropy');
-    title('Isotropy Comparison');
-    legend(cellfun(@(r) r.method, results_cell, 'UniformOutput', false), 'Location', 'best');
+% ---------------- Linear Condition Number ----------------
+nexttile; hold on; grid on;
+for k = 1:n
+    plot(results_cell{k}.cond_lin_hist, 'LineWidth', 1.6);
+end
+ylabel('cond(J_v)');
+title('Linear Condition Number Comparison');
+legend(cellfun(@(r) r.method, results_cell, 'UniformOutput', false), 'Location', 'best');
 
-    nexttile; hold on; grid on;
-    for k = 1:n
-        plot(results_cell{k}.iter_hist, 'LineWidth', 1.6);
-    end
-    ylabel('Internal Iters');
-    xlabel('Path Step');
-    title('Solver Iterations per Path Step');
-    legend(cellfun(@(r) r.method, results_cell, 'UniformOutput', false), 'Location', 'best');
+% ---------------- Angular Isotropy ----------------
+nexttile; hold on; grid on;
+for k = 1:n
+    plot(results_cell{k}.iso_ang_hist, 'LineWidth', 1.6);
+end
+ylabel('iso(J_w)');
+title('Angular Isotropy Comparison');
+legend(cellfun(@(r) r.method, results_cell, 'UniformOutput', false), 'Location', 'best');
+
+% ---------------- Linear Isotropy ----------------
+nexttile; hold on; grid on;
+for k = 1:n
+    plot(results_cell{k}.iso_lin_hist, 'LineWidth', 1.6);
+end
+ylabel('iso(J_v)');
+title('Linear Isotropy Comparison');
+legend(cellfun(@(r) r.method, results_cell, 'UniformOutput', false), 'Location', 'best');
+
+% ---------------- Solver Iterations ----------------
+nexttile; hold on; grid on;
+for k = 1:n
+    plot(results_cell{k}.iter_hist, 'LineWidth', 1.6);
+end
+ylabel('Internal Iters');
+xlabel('Path Step');
+title('Solver Iterations per Path Step');
+legend(cellfun(@(r) r.method, results_cell, 'UniformOutput', false), 'Location', 'best');
 end
 
 function print_metric_row(label, results_cell, fieldname, scientific)
