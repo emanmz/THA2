@@ -46,16 +46,14 @@ T_packing = FK_space_no_plot(M, S_space, pose_packing);
 T_ready = FK_space_no_plot(M, S_space, pose_ready);
 T_singularity = FK_space_no_plot(M, S_space, pose_singularity);
 
-%% 1. Home to Packing (IK-driven)
-% fprintf('Animating IK: Home to Packing...\n');
-% animate_transition_IK(T_home, T_packing, pose_home, S_space, M, steps, pause_time, eomg, ev);
+
 % 2. Packing to Ready
 fprintf('Animating IK: Packing to Ready...\n');
 animate_transition_IK(T_packing, T_ready, pose_packing, S_space, M, steps, pause_time, eomg, ev);
 
-% % 3. Ready to Singularity
-% fprintf('Animating IK: Ready to Singularity...\n');
-% animate_transition_IK(T_ready, T_singularity, pose_ready, S_space, M, steps, pause_time, eomg, ev);
+% 3. Ready to Singularity
+fprintf('Animating IK: Ready to Singularity...\n');
+animate_transition_IK(T_ready, T_singularity, pose_ready, S_space, M, steps, pause_time, eomg, ev);
 
 %% --- IK Animation Function ---
 function animate_transition_IK(T_start, T_end, theta_init, Slist, M, steps, pause_time, eomg, ev)
