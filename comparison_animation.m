@@ -44,6 +44,8 @@ T_end   = FK_space_no_plot(M, S_space, theta_goal);
 
 %% Common parameters (IDENTICAL for all)
 steps      = 200;
+stepsT      = 500;
+
 pause_time = 0.01;
 eomg       = 1e-3;
 ev         = 1e-3;
@@ -62,7 +64,7 @@ results_IK = animate_transition_common( ...
 fprintf('\n=== Running Jacobian Transpose (Packing -> Ready) ===\n');
 results_JT = animate_transition_common( ...
     'JT', T_start, T_end, theta_start, S_space, M, qs, ...
-    steps, pause_time, eomg_T, ev_T, max_iter, 'jt_comparison.gif');
+    stepsT, pause_time, eomg_T, ev_T, max_iter, 'jt_comparison.gif');
 
 fprintf('\n=== Running Redundancy Resolution (Packing -> Ready) ===\n');
 results_RR = animate_transition_common( ...
